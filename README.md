@@ -1,10 +1,9 @@
 # CSI3131
-# CSI2120
-PROGRAMMING PARADIGMS 
+Operating Systems
 
-Winter 2017
+Winter 2018
 
-Languages: Prolog, Scheme, Go
+Languages: C, Java
 
 Felix Singerman
 
