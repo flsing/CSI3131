@@ -38,14 +38,15 @@ class Student extends Thread
 
 	public void run()
 	{
+		
 		while(true)
 		{
-
-			System.out.println("Student: Must wait for TA "+ta.getMAX()+" holes ahead");
-
 			try {
+				if(ta.digStudent.availablePermits()==0)
+					System.out.println("Student: Must wait for TA "+ta.getMAX()+" holes ahead");
 				ta.digStudent.acquire();
-				try {
+				
+				
 					ta.waitShovel.acquireUninterruptibly();
 					// Can dig a hole - lets get the shovel
 					System.out.println("Student: Got the shovel");
@@ -55,19 +56,17 @@ class Student extends Thread
 					System.out.println("Student: Hole "+ta.getHoleDug()+" Dug");
 
 					System.out.println("Student: Letting go of the shovel");
-				}finally{
+					
+				
 					ta.waitShovel.release();
-				}
+				
 
 			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}finally{
 				ta.waitProf.release();
 			}
-
 			if(isInterrupted()) break;
-
 		}
 		System.out.println("Student is done");
 	}
@@ -105,7 +104,6 @@ class TA extends Thread
 	{
 		while(true)
 		{
-
 			try {
 				waitTa.acquire();
 				try {
@@ -122,11 +120,8 @@ class TA extends Thread
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}finally {
-
 				digStudent.release();
-
 			}
-
 			if(isInterrupted()) break;
 		}
 		System.out.println("TA is done");
@@ -159,10 +154,7 @@ class Professor extends Thread
 			}finally{
 				ta.waitTa.release();
 			}
-
 		}
-
 		System.out.println("Professeur: We have worked enough for today");
-
 	}
 }
