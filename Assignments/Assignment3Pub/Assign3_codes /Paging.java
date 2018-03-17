@@ -215,15 +215,43 @@ public class Paging {
 	// complete this method
 	// <----------------------------------------------------------------------------
 	public int replacePageLRU(int replacePageNum) {
+		int oldPageNum = 0;
+		int freedFrame;
+
+		// get first present 
+		for( int i = 0; i < pageTable.length; i++){
+			if( pageTable[i].p == 1){
+				oldPageNum = i;
+				break;
+			}
+		}
+
+		// get the next present
+		for( int j = oldPageNum + 1; j < pageTable.length; j++){
+			if( pageTable[j].p == 1){
+				// do comparison between pointers to see who was there longest
+				if( pageTable[j].lastTouchTime < pageTable[oldPageNum].lastTouchTime){
+					oldPageNum = j ; 
+				}
+			} 
+		}
+
+		// get frame number
+		freedFrame = pageTable[oldPageNum].frame;
+
+		// clear the page table entry
+		updatePageTableEntry(oldPageNum, -1, (byte) 0, (byte) 0, (byte) 0,
+							 (byte) 0, 0, 0);
+		controlPanel.removePhysicalPage(oldPageNum);
 		
-		
+		// Assign the Free frame to the requesting page
+		// add link to frame
+		updatePageTableEntry(replacePageNum, freedFrame, (byte) 1, (byte) 0,
+							 (byte) 0, (byte) 0, kernel.clock, 0);
+		controlPanel.addPhysicalPage(replacePageNum, freedFrame);
 
-
-
-
-
-
-
+		// logging and leave
+		logReplacement(oldPageNum, replacePageNum, freedFrame);
 
 		return (replacePageNum);
 	}
@@ -231,15 +259,51 @@ public class Paging {
 	// complete this method
 	// <----------------------------------------------------------------------------
 	public int replacePageCLOCK(int replacePageNum) {
+		// second chance
+		int oldPageNum, freedFrame; 
+		boolean circular = true;
 
+		while(circular){
+			for(int i = bufPointer; i < pageTable.length; i++){
+				if( pageTable[i].p == 1){
+					// give it second chance if used
+					if( pageTable[i].u == 1){
+						pageTable[i].u = 0;
 
+					} else { // unused
+						oldPageNum = i;
+						// reset circular buffer
+						bufPointer = i;
+						bufPointer = (bufPointer +1) % (pageTable.length -1);
 
+						// get frame number
+						freedFrame = pageTable[oldPageNum].frame;
 
+						// clear the page table entry
+						updatePageTableEntry(oldPageNum, -1, (byte) 0, (byte) 0, (byte) 0,
+								 (byte) 0, 0, 0);
+						controlPanel.removePhysicalPage(oldPageNum);
+			
+						// Assign the Free frame to the requesting page
+						// add link to frame
+						updatePageTableEntry(replacePageNum, freedFrame, (byte) 1, (byte) 0,
+								 (byte) 0, (byte) 1, kernel.clock, 0);
+						controlPanel.addPhysicalPage(replacePageNum, freedFrame);
 
+						// logging and leave
+						logReplacement(oldPageNum, replacePageNum, freedFrame);
+						circular = false;
+						break;
+					}
+				}
+				// reset buffer if end of circle
+				if (i == pageTable.length -1 ){
+					bufPointer = 0;
+					break;
+				}
+			}
+		}
 
-
-
-		
 		return (replacePageNum);
 	}
 	
