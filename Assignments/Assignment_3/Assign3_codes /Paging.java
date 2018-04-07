@@ -222,6 +222,7 @@ public class Paging {
 		for( int i = 0; i < pageTable.length; i++){
 			if( pageTable[i].p == 1){
 				oldPageNum = i;
+
 				break;
 			}
 		}
